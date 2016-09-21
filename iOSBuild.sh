@@ -1,34 +1,62 @@
 #!/bin/bash
 
-# git checkout dev1.0
 
 
-HCScheme="HCMedical"
-HCBranchName="dev1.2.0"
-HCCodeSignIdentity="iPhone Distribution: Ping An Technology (Shenzhen) Co., Ltd."
-HCProvisioningProFile="803ec3e3-1e79-48e9-a066-6b3f7d1831c6"
+#***********配置项
+HCProjectName="Test"			
+HCScheme="Test"
+HCBranchName="master"
+HCCodeSignIdentity="iPhone Developer: zaiwei_1990@163.com (SZ3732TS8N)"
+HCProvisioningProFile="0ba56621-516e-4ab2-b668-3c64bcec1359"
 HCConfiguration="Release"
+#*****--------------------
 
 
-HCDate=`date +%Y%m%d_%H%M`
-HCWorkspace=`pwd`
+#拉代码
+git pull origin $HCBranchName
+git checkout $HCBranchName
+
+
+HCDate=`date +%Y%m%d_%H%M` 								#日期
+HCWorkspace=`pwd`										#工程路径
 echo "workspace=$HCWorkspace-----------------------"
+HCBuildDir="$HCWorkspace/build"			 				#build路径
+HCBuildTempDir="$HCBuildDir/temp/$HCBranchName/$HCDate"	#构建过程中的文件
+HCIpaDir="$HCBuildDir/ipa"								#生成ipa文件路径
+echo "HCBiuldDir=$HCBuildDir"
+
+#清除构建的文件
+rm -rf $HCBuildDir/temp
+
+#创建构建和输出的路径
+mkdir $HCBuildDir
+mkdir $HCBuildTempDir
+mkdir $HCIpaDir
 
 
+
+#构建
 xcodebuild \
--workspace $HCWorkspace/HCMedical.xcodeproj/project.xcworkspace \
+-workspace $HCWorkspace/$HCProjectName.xcodeproj/project.xcworkspace \
 -scheme $HCScheme \
 -configuration "Release" \
 CODE_SIGN_IDENTITY="$HCCodeSignIdentity"  \
 PROVISIONING_PROFILE="$HCProvisioningProFile" \
 clean \
 build \
--derivedDataPath $HCWorkspace/$HCBranchName/$HCDate
+-derivedDataPath $HCBuildTempDir
 
+#生成ipa
+xcrun -sdk iphoneos \
+-v PackageApplication $HCBuildTempDir/Build/Products/$HCConfiguration-iphoneos/$HCProjectName.app \
+-o "$HCIpaDir/$HCProjectName&$HCBranchName&$HCDate.ipa"
 
-xcrun -sdk iphoneos -v PackageApplication "$HCWorkspace/$HCBranchName/$HCDate/Build/Products/$HCConfiguration-iphoneos/$HCScheme.app" -o ~/Desktop/$HCScheme.ipa
+# -o ~/Desktop/$HCScheme.ipa
 
-
+# #清除
+# rm -rdf "$buildDir"
+# rm -rdf "$distDir"
+# mkdir "$distDir"
 
 
 # xcodebuild -target "HCMedical" -configuration Release -showBuildSettings
